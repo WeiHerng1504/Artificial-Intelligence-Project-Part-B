@@ -1,6 +1,6 @@
 # COMP30024 Artificial Intelligence, Semester 1 2023
 # Project Part B: Game Playing Agent
-
+import numpy as np
 from referee.game import \
     PlayerColor, Action, SpawnAction, SpreadAction, HexPos, HexDir, MAX_CELL_POWER
 
@@ -86,3 +86,35 @@ class Agent:
                 # remove from record
                 self.grid.pop(cell, None)
                 pass
+    
+    def mini_max(grid, depth, color):
+        if depth == 0 """or leaf node """ :
+            return eval_func(grid)
+        
+        if color:
+            best_score = -np.inf
+            best_move = None
+            for move in potential_moves:
+                score = mini_max(move, depth-1, color != color)
+                if score > best_score:
+                    best_score = score
+                    best_move = move
+                
+                return best_score, best_move
+
+        else:
+            best_score = np.inf
+            best_move = None
+            for move in potential_moves:
+                score = mini_max(move, depth-1, color)
+                if score < best_score:
+                    best_score = score
+                    best_move = move
+
+                return best_score, best_move
+
+    # return score for a particular grid state
+    def eval_func(grid):
+        score = 0
+        """not sure how to evaluate the grid and assign scores to it"""
+        return score

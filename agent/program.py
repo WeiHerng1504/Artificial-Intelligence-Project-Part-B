@@ -47,11 +47,8 @@ class Agent:
         startingState = {GRID_LAYOUT: currentGrid, PREVIOUS_MOVES: [], 
                      HEURISTIC_RESULT: [], GAME_ENDED: False}
 
-        bestStates = [startingState]
-        solution = False
 
-        
-
+    
         # match self._color:
         #     case PlayerColor.RED:
         #         return SpawnAction(HexPos(3, 3))
@@ -69,7 +66,6 @@ class Agent:
                 self.grid[cell] = (color, 1)
                 pass
             case SpreadAction(cell, direction):
-                
                 for power in range(1, self.grid[cell][1] + 1):
                     # if not in grid, spawn
                     if (cell + power*direction) not in self.grid:
@@ -87,34 +83,3 @@ class Agent:
                 self.grid.pop(cell, None)
                 pass
     
-    def mini_max(grid, depth, color):
-        if depth == 0 """or leaf node """ :
-            return eval_func(grid)
-        
-        if color:
-            best_score = -np.inf
-            best_move = None
-            for move in potential_moves:
-                score = mini_max(move, depth-1, color != color)
-                if score > best_score:
-                    best_score = score
-                    best_move = move
-                
-                return best_score, best_move
-
-        else:
-            best_score = np.inf
-            best_move = None
-            for move in potential_moves:
-                score = mini_max(move, depth-1, color)
-                if score < best_score:
-                    best_score = score
-                    best_move = move
-
-                return best_score, best_move
-
-    # return score for a particular grid state
-    def eval_func(grid):
-        score = 0
-        """not sure how to evaluate the grid and assign scores to it"""
-        return score

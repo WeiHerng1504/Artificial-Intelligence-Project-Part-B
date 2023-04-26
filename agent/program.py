@@ -1,9 +1,8 @@
 # COMP30024 Artificial Intelligence, Semester 1 2023
 # Project Part B: Game Playing Agent
-import numpy as np
+
 from referee.game import \
     PlayerColor, Action, SpawnAction, SpreadAction, HexPos, HexDir, MAX_CELL_POWER
-
 
 # This is the entry point for your game playing agent. Currently the agent
 # simply spawns a token at the centre of the board if playing as RED, and
@@ -35,6 +34,12 @@ class Agent:
         """
         Return the next action to take.
         """
+        
+        # first move, spawn center always
+        if not self.grid:
+            return SpawnAction(HexPos(3, 3))
+        
+        
         currentGrid = {PlayerColor.RED: {}, PlayerColor.BLUE: {}}
         
         # splitting cells for computation

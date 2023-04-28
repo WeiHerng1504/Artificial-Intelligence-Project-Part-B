@@ -11,6 +11,7 @@ from .player import Player
 from .board import Board, PlayerColor
 from .actions import Action, SpawnAction, SpreadAction
 from .exceptions import PlayerException, IllegalActionException
+import neat
 
 
 # Here we define the ADT for all possible game updates. This is a useful
@@ -61,6 +62,8 @@ GameUpdate = PlayerInitialising \
            | UnhandledError \
            | GameEnd
 
+import os
+
 # Entry-point for running a game...
 async def game(
     p1: Player,
@@ -70,7 +73,41 @@ async def game(
     Run an asynchronous game sequence, yielding updates to the consumer as the
     game progresses. The consumer is responsible for handling these updates
     appropriately (e.g. logging them).
+    
     """
+    def eval_genomes(genomes, config):
+        for i, (genome_id1, genome1) in enumerate(genomes):
+            if i == len(genomes) - 1:
+                break
+            genome1.fitness = 0
+            for genome_id2, genome2 in genomes[i+1:]:
+                genome2.fitness = 0 if genome2.fitness == None else genome2.fitness
+                #game = PongGame(window, width, height)
+                #game.train_ai(genome1, genome2, config)
+
+
+    def calculate_fitness(self, genome1, genome2):
+        pass
+
+    def run_neat(config):
+    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-7')
+        p = neat.Population(config)
+        p.add_reporter(neat.StdOutReporter(True))
+        stats = neat.StatisticsReporter()
+        p.add_reporter(stats)
+        p.add_reporter(neat.Checkpointer(1))
+
+        winner = p.run(eval_genomes, 50)
+
+    
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, "config.txt")
+
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         config_path)
+    run_neat(config)
+
     players: dict[PlayerColor, Player] = {
         player.color: player for player in [p1, p2]
     }
@@ -105,6 +142,8 @@ async def game(
                     board.apply_action(action)
                     yield BoardUpdate(board)
 
+                    train_ai(genome1, genome2, config)
+
                     # Check if game is over.
                     if board.game_over:
                         winner_color = board.winner_color
@@ -131,3 +170,21 @@ async def game(
         raise e
         
     yield GameEnd(players[winner_color] if winner_color is not None else None)
+
+
+    def train_ai(self, genome1, genome2, config):
+        net1 = neat.nn.FeedForwardNetwork.create(genome1, config)
+        net2 = neat.nn.FeedForwardNetwork.create(genome2, config)
+
+        output1 = net1.activate(
+                (players[PlayerColor.BLUE].action))
+        output2 = net2.activate(
+                (players[PlayerColor.RED].action))
+        print(output1, output2)
+    #     decision1 = output1.index(max(output1))
+
+        if board.game_over:
+            calculate_fitness(genome1, genome2)
+            return
+
+

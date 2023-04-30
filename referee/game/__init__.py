@@ -75,6 +75,14 @@ async def game(
     appropriately (e.g. logging them).
     
     """
+    grid = [
+            [0, 0, 0, 0, 0, 0,0],
+            [0, 0, 0, 0, 0, 0,0],
+            [0, 0, 0, 0, 0, 0,0],
+            [0, 0, 0, 0, 0, 0,0],
+            [0, 0, 0, 0, 0, 0,0],
+            [0, 0, 0, 0, 0, 0,0],
+        ]
     def eval_genomes(genomes, config):
         for i, (genome_id1, genome1) in enumerate(genomes):
             if i == len(genomes) - 1:
@@ -176,10 +184,8 @@ async def game(
         net1 = neat.nn.FeedForwardNetwork.create(genome1, config)
         net2 = neat.nn.FeedForwardNetwork.create(genome2, config)
 
-        output1 = net1.activate(
-                (players[PlayerColor.BLUE].action))
-        output2 = net2.activate(
-                (players[PlayerColor.RED].action))
+        output1 = net1.activate(self.grid)
+        output2 = net2.activate(self.grid)
         print(output1, output2)
     #     decision1 = output1.index(max(output1))
 

@@ -41,6 +41,7 @@ class Agent:
         
         
         currentGrid = {PlayerColor.RED: {}, PlayerColor.BLUE: {}}
+
         
         # splitting cells for computation
         for cell in self.grid.keys():

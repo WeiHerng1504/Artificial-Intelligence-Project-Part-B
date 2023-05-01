@@ -65,7 +65,7 @@ class Agent:
         
         # format
         # best_move = (r,q,player,k)
-        
+
         if best_state != None:
             best_move = best_state[PREVIOUS_MOVES][-1]
 
@@ -107,8 +107,8 @@ class Agent:
                 self.grid.pop(cell, None)
                 pass
 
-    # return score for a particular grid state
 
+# return score for a particular grid state
 def eval_func(state):
     score = 0
     # difference between num of reds and blues occupied
@@ -119,6 +119,7 @@ def eval_func(state):
     score = redCount - blueCount
     return score
 
+# setting the color? or maximise? check ifs condition
 # takes a state, depth limit and colour; returns best score and best move
 def mini_max(state, depth, color: PlayerColor):
     # game ended, no red hexes or no blue hexes
@@ -134,7 +135,7 @@ def mini_max(state, depth, color: PlayerColor):
                 best_score = score
                 best_move = child
 
-            return best_score, best_move
+        return best_score, best_move
 
     else:
         best_score = np.inf
@@ -144,13 +145,18 @@ def mini_max(state, depth, color: PlayerColor):
             if score < best_score:
                 best_score = score
                 best_move = child
-            
 
-            return best_score, best_move
+        return best_score, best_move
 
     
 # state format
-# state = {gridLayout, previousMoves, heuristicResults, gameEnded}
+# state = {gridLayout, previousMoves, heuristicResults, gameEnded, score}
+# gridLayout = { red : { (r, q, p, k), ...}, blue : { (r, q, p, k), ...} }
+# previousMoves = [(r, q, p, k), ...]
+# heuristicResults = [int, int]
+# gameEnded = bool
+
+# where to insert generateStateSpawn?
 
 # return list of potential moves based on given state
 def potential_states( state, colour: PlayerColor):
@@ -167,49 +173,17 @@ def potential_states( state, colour: PlayerColor):
                 newState = generateStateSpread(state, redHex, direction,colour)
                 if newState:
                     potentialStates.append(newState)
+            # generateStateSpawn(state,colour)
     else:
         for blueHex in state[GRID_LAYOUT][PlayerColor.BLUE]:
             #generate a possible future state
             for direction in validDirections:
                 newState = generateStateSpread(state, blueHex, direction, colour)
                 if newState:
-                    potentialStates.append(newState)
-    
+                    potentialStates.append(newState)   
+            # generateStateSpawn(state,colour)
+
     return potentialStates
-
-
-# def updateState(state):
-
-#     # run a heuristic comparison
-#     # heuristic has two components, 
-#     # first item is hexes converted, 
-#     # second item is shortest straight line distance
-#     # we prioritize first item
-
-#     # placeholder values to be replaced
-#     # bestHeuristic = [0, 1000]
-
-#     # for state in potentialMoves:
-#     # solution found
-#     if state["gameEnded"]:
-#         solution = state["previousMoves"]
-#         # break
-
-#     # converts more hexes
-#     if state["heuristicResult"][0] > bestHeuristic[0]:
-#         bestHeuristic = state["heuristicResult"]
-#         # continue
-
-#     # shorter distance
-#     if state["heuristicResult"][0] == bestHeuristic[0] and state["heuristicResult"][1] < bestHeuristic[1]:
-#         bestHeuristic = state["heuristicResult"]
-
-
-#     # keeping only desirable nodes
-#     # if not solution:
-#     #     bestStates = [state for state in potentialMoves if state["heuristicResult"] == bestHeuristic]
-    
-#     return state
 
 
 # Simulate a move. (spread action)
@@ -323,33 +297,8 @@ def generateStateSpawn(predecessor: dict[dict, list, list, bool, int], color:Pla
     randnum2 = random.randrange(0,6)
 
     if color == PlayerColor.RED:
-        # for power in range(1, newGrid["redHexes"][hex][1] + 1):
-
-        #     r_new = (hex[0] + direction[0] * power) % 7
-        #     q_new = (hex[1] + direction[1] * power) % 7
-
-        #     # remove a blue hex
-        #     if (r_new, q_new) in newGrid["blueHexes"]:
-        #         heuristicResult[0] += 1
-        #         newGrid["redHexes"].update({(r_new, q_new): 
-        #                         (newGrid["blueHexes"][(r_new, q_new)])})
-        #         newGrid["blueHexes"].pop((r_new, q_new), None)
-
-        #     # update a red hex
-        #     if (r_new, q_new) in newGrid["redHexes"]:
-        #         if newGrid["redHexes"][(r_new, q_new)][1] < 6:
-        #             newGrid["redHexes"].update({(r_new, q_new): 
-        #                         ('r', newGrid["redHexes"][(r_new, q_new)][1] + 1)})
-        #         else:
-        #             newGrid["redHexes"].pop((r_new, q_new), None)
-        #     else:
-        #         newGrid["redHexes"].update({(r_new, q_new) : ('r', 1)})
-
-        # # remove starting hex
-        # newGrid["redHexes"].pop((hex))
-
         # spawn red hex
-        if totalPower(predecessor) < 49:
+        while totalPower(predecessor) < 49 and valid_spawn(predecessor,(randnum1,randnum2)):
             newGrid["redHexes"].update({(randnum1,randnum2) : (color, 1)})
 
         # update heuristic
@@ -369,31 +318,11 @@ def generateStateSpawn(predecessor: dict[dict, list, list, bool, int], color:Pla
 
         return {"gridLayout": newGrid, "previousMoves": newState["previousMoves"], 
                 "heuristicResult": heuristicResult, "gameEnded": gameEnded}
-    else:
-        for power in range(1, newGrid["blueHexes"][hex][1] + 1):
-
-            r_new = (hex[0] + direction[0] * power) % 7
-            q_new = (hex[1] + direction[1] * power) % 7
-
-            # remove a red hex
-            if (r_new, q_new) in newGrid["redHexes"]:
-                heuristicResult[0] += 1
-                newGrid["blueHexes"].update({(r_new, q_new): 
-                                (newGrid["redHexes"][(r_new, q_new)])})
-                newGrid["redHexes"].pop((r_new, q_new), None)
-
-            # update a blue hex
-            if (r_new, q_new) in newGrid["blueHexes"]:
-                if newGrid["blueHexes"][(r_new, q_new)][1] < 6:
-                    newGrid["blueHexes"].update({(r_new, q_new): 
-                                ('r', newGrid["blueHexes"][(r_new, q_new)][1] + 1)})
-                else:
-                    newGrid["blueHexes"].pop((r_new, q_new), None)
-            else:
-                newGrid["blueHexes"].update({(r_new, q_new) : ('r', 1)})
-
-        # remove starting hex
-        newGrid["blueHexes"].pop((hex))
+    
+    if color == PlayerColor.BLUE:
+        # spawn blue hex
+        while totalPower(predecessor) < 49 and valid_spawn(predecessor,(randnum1,randnum2)):
+            newGrid["redHexes"].update({(randnum1,randnum2) : (color, 1)})
 
         # update heuristic
         heuristicResult.append(heuristic(newGrid))
@@ -455,6 +384,8 @@ def heuristic(layout: dict[dict, dict]):
 
     return shortestDistance
 
+
+#check for bug
 def totalPower(state):
     reds = state[GRID_LAYOUT][PlayerColor.RED]
     blues = state[GRID_LAYOUT][PlayerColor.BLUE]
@@ -467,7 +398,19 @@ def totalPower(state):
     
     return power
 
+# check for bug
 # check if location is already in state[GRID_LAYOUT], returns true if location not in.
 def valid_spawn(state, location):
+    grid = state[GRID_LAYOUT]
+    reds = grid[PlayerColor.RED]
+    blues = grid[PlayerColor.BLUE]
+
+    for red in reds:
+        if location == (red[0],red[1]):
+            return False
+
+    for blue in blues:
+        if location == (blue[0],blue[1]):
+            return False
     
     return True

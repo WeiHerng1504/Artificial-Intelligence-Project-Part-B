@@ -107,22 +107,22 @@ class Agent:
 
         if best_state != None:
             best_move = best_state[PREVIOUS_MOVES][-1]
-
+        print(best_move)
         
         match self._color:
             case PlayerColor.RED:
                 # return(SpawnAction(HexPos(3,3)))
-                if IS_SPAWN_ACTION:
+                if best_state[IS_SPAWN_ACTION]:
                     return SpawnAction(best_move[0])
                 else:
-                    return SpreadAction(best_move[0], HexDir(best_move[1],best_move[2]))
+                    return SpreadAction(best_move[0], best_move[1])
             case PlayerColor.BLUE:
                 # This is going to be invalid... BLUE never spawned!
                 # return(SpawnAction(HexPos(3,2)))
-                if IS_SPAWN_ACTION:
-                    return SpawnAction(HexPos(best_move[0]))
+                if best_state[IS_SPAWN_ACTION]:
+                    return SpawnAction(best_move[0])
                 else:
-                    return SpreadAction(HexPos(best_move[0]), HexDir(best_move[1],best_move[2]))
+                    return SpreadAction(best_move[0], best_move[1])
 
 
     def turn(self, color: PlayerColor, action: Action, **referee: dict):
@@ -166,8 +166,8 @@ class Agent:
         # ownPower = 
         # opponentPower = 
         # +ve means more owns; -ve means more opponents
-        score = ownCount - opponentCount + self.heuristic(state[GRID_LAYOUT])
-
+        score = ownCount - opponentCount 
+        # score = ownPower - opponentPower
         return score
 
     # setting the color? or maximise? check ifs condition
@@ -175,7 +175,7 @@ class Agent:
     def mini_max(self, state, depth, maximise):
 
         # game ended, no red hexes or no blue hexes
-        if depth == 0 or state[GAME_ENDED]:  
+        if depth == 0: #or state[GAME_ENDED]:  
             return self.eval_func(state), None
         
         best_move = None
@@ -294,7 +294,7 @@ class Agent:
             else:
                 gameEnded = False
 
-            newState["previousMoves"].append(hex + direction)
+            newState["previousMoves"].append((hex,direction))
 
             return {"gridLayout": newGrid, "previousMoves": newState["previousMoves"], 
                     "heuristicResult": heuristicResult, "gameEnded": gameEnded, "isSpawnAction":False}
@@ -339,7 +339,7 @@ class Agent:
             else:
                 gameEnded = False
 
-            newState["previousMoves"].append(hex + direction)
+            newState["previousMoves"].append((hex,direction))
 
             return {"gridLayout": newGrid, "previousMoves": newState["previousMoves"], 
                     "heuristicResult": heuristicResult, "gameEnded": gameEnded, "isSpawnAction": False}
@@ -378,7 +378,9 @@ class Agent:
             #     gameEnded = False
 
             # edit this
-            newState["previousMoves"].append(tuple(hex) + (0,0))
+            # print(tuple(hex) + (0,0))
+
+            newState["previousMoves"].append((hex,0,0))
 
             return {"gridLayout": newGrid, "previousMoves": newState["previousMoves"], 
                     "heuristicResult": heuristicResult, "gameEnded": False, "isSpawnAction": isSpawnAction}
@@ -408,7 +410,7 @@ class Agent:
             #     gameEnded = False
 
             #edit this
-            newState["previousMoves"].append(tuple(hex) + (0,0))
+            newState["previousMoves"].append((hex,0,0))
 
             return {"gridLayout": newGrid, "previousMoves": newState["previousMoves"], 
                     "heuristicResult": heuristicResult, "gameEnded": False, "isSpawnAction": isSpawnAction}
@@ -460,15 +462,18 @@ class Agent:
     def totalPower(self, state):
         reds = state[GRID_LAYOUT][PlayerColor.RED]
         blues = state[GRID_LAYOUT][PlayerColor.BLUE]
-        redPower = 0
-        bluePower = 0
+        # redPower = 0
+        # bluePower = 0
+        power = 0
         for red in reds.values():
-            redPower += red[1]
+            # redPower += red[1]
+            power += red[1]
 
         for blue in blues.values():
-            bluePower += blue[1]
-        
-        return redPower+bluePower
+            # bluePower += blue[1]
+            power += blue[1]
+
+        return power
 
     # check if position is already in state[GRID_LAYOUT], returns true if location not in.
     def valid_spawn(self, state, position):

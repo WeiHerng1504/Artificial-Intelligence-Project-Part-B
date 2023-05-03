@@ -32,8 +32,8 @@ class Agent:
 
         #TBD
         self.grid = {}
-        self.currentState = {GRID_LAYOUT: {PlayerColor.RED: {}, PlayerColor.BLUE: {}}, PREVIOUS_MOVES: [], 
-                             HEURISTIC_RESULT: [], GAME_ENDED: False, IS_SPAWN_ACTION: None}
+        # self.currentState = {GRID_LAYOUT: {PlayerColor.RED: {}, PlayerColor.BLUE: {}}, PREVIOUS_MOVES: [], 
+                            #  HEURISTIC_RESULT: [], GAME_ENDED: False, IS_SPAWN_ACTION: None}
         match color:
             case PlayerColor.RED:
                 print("Testing: I am playing as red")
@@ -47,22 +47,22 @@ class Agent:
         print("action " + str(self._color) + "\n")
 
         #don't need this?
-        # currentGrid = {PlayerColor.RED: {}, PlayerColor.BLUE: {}}
+        currentGrid = {PlayerColor.RED: {}, PlayerColor.BLUE: {}}
 
 
-        # # splitting cells for computation
-        # for cell in self.grid.keys():
-        #     if self.grid[cell][0] == PlayerColor.RED:
-        #         currentGrid[PlayerColor.RED][cell] = self.grid[cell]
-        #     else:
-        #         currentGrid[PlayerColor.BLUE][cell] = self.grid[cell]
+        # splitting cells for computation
+        for cell in self.grid.keys():
+            if self.grid[cell][0] == PlayerColor.RED:
+                currentGrid[PlayerColor.RED][cell] = self.grid[cell]
+            else:
+                currentGrid[PlayerColor.BLUE][cell] = self.grid[cell]
 
         # don't need this?
-        # currentState = {GRID_LAYOUT: currentGrid, PREVIOUS_MOVES: [], 
-        #              HEURISTIC_RESULT: [], GAME_ENDED: False, IS_SPAWN_ACTION: None}
+        currentState = {GRID_LAYOUT: currentGrid, PREVIOUS_MOVES: [], 
+                     HEURISTIC_RESULT: [], GAME_ENDED: False, IS_SPAWN_ACTION: None}
 
-        bestStates = [self.currentState]
-        solution = False
+        # bestStates = [currentState]
+        # solution = False
 
         # # run a heuristic comparison
         # # heuristic has two components, 
@@ -97,9 +97,9 @@ class Agent:
         depth = 3
         maximise = True
 
-        best_score, best_state = self.mini_max(self.currentState, depth, maximise)
+        best_score, best_state = self.mini_max(currentState, depth, maximise)
         
-        self.currentState = best_state
+        # self.currentState = best_state
         # print(self.grid)
         # print(self.currentState)
         # format
@@ -111,14 +111,13 @@ class Agent:
         
         match self._color:
             case PlayerColor.RED:
-                # return(SpawnAction(HexPos(3,3)))
+
                 if best_state[IS_SPAWN_ACTION]:
                     return SpawnAction(best_move[0])
                 else:
                     return SpreadAction(best_move[0], best_move[1])
             case PlayerColor.BLUE:
-                # This is going to be invalid... BLUE never spawned!
-                # return(SpawnAction(HexPos(3,2)))
+
                 if best_state[IS_SPAWN_ACTION]:
                     return SpawnAction(best_move[0])
                 else:
@@ -165,11 +164,11 @@ class Agent:
         ownCount = len(state[GRID_LAYOUT][self._color])
         opponentCount = len(state[GRID_LAYOUT][self._color.opponent])
 
-        # ownPower = 
-        # opponentPower = 
+        ownPower = sum(cell[1] for cell in state[GRID_LAYOUT][self._color].values())
+        opponentPower = sum(cell[1] for cell in state[GRID_LAYOUT][self._color.opponent].values())
         # +ve means more owns; -ve means more opponents
-        score = ownCount - opponentCount 
-        # score = ownPower - opponentPower
+        # score = ownCount - opponentCount 
+        score = ownPower - opponentPower
         return score
 
     # setting the color? or maximise? check ifs condition
@@ -286,7 +285,8 @@ class Agent:
             newGrid[PlayerColor.RED].pop((hex))
 
             # update heuristic
-            heuristicResult.append(self.heuristic(newGrid))
+            # heuristicResult.append(self.heuristic(newGrid))
+            heuristicResult.append(0)
 
             # state with no redhexes, avoid
             if not newGrid[PlayerColor.RED]:
@@ -333,7 +333,8 @@ class Agent:
             newGrid[PlayerColor.BLUE].pop((hex))
 
             # update heuristic
-            heuristicResult.append(self.heuristic(newGrid))
+            # heuristicResult.append(self.heuristic(newGrid))
+            heuristicResult.append(0)
 
             # state with no blueHexes, avoid
             if not newGrid[PlayerColor.BLUE]:
@@ -371,7 +372,8 @@ class Agent:
                     isSpawnAction = True
 
             # update heuristic
-            heuristicResult.append(self.heuristic(newGrid))
+            # heuristicResult.append(self.heuristic(newGrid))
+            heuristicResult.append(0)
 
             # # state with no redhexes, avoid
             # if not newGrid[PlayerColor.RED]:
@@ -403,7 +405,8 @@ class Agent:
                     isSpawnAction = True
 
             # update heuristic
-            heuristicResult.append(self.heuristic(newGrid))
+            # heuristicResult.append(self.heuristic(newGrid))
+            heuristicResult.append(0)
 
             # # state with no blueHexes, avoid
             # if not newGrid[PlayerColor.BLUE]:

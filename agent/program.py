@@ -138,7 +138,7 @@ class Agent:
                 for power in range(1, self.grid[cell][1] + 1):
                     # if not in grid, spawn
                     if (cell + direction*power) not in self.grid.keys():
-                        self.grid[cell] = (color, 1)
+                        self.grid[cell+ direction*power] = (color, 1)
                     #in grid, add to power
                     else: 
                         # exceed maixmum, kill cell

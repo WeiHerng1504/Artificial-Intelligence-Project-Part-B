@@ -133,18 +133,16 @@ class Agent:
         match action:
             case SpawnAction(cell):
                 self.grid[cell] = (color, 1)
-
                 pass
             case SpreadAction(cell, direction):
-                
                 for power in range(1, self.grid[cell][1] + 1):
                     # if not in grid, spawn
-                    if (cell + direction*power) not in self.grid:
+                    if (cell + direction*power) not in self.grid.keys():
                         self.grid[cell] = (color, 1)
                     #in grid, add to power
                     else: 
                         # exceed maixmum, kill cell
-                        if self.grid[cell + direction*power] == MAX_CELL_POWER:
+                        if self.grid[cell + direction*power][1] == MAX_CELL_POWER:
                             self.grid.pop(cell + direction*power, None)
                         # not exceed, add to power
                         else:

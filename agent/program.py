@@ -47,7 +47,7 @@ class Agent:
         print("action " + str(self._color) + "\n")
 
         #don't need this?
-        currentGrid = {PlayerColor.RED: {}, PlayerColor.BLUE: {}}
+        # currentGrid = {PlayerColor.RED: {}, PlayerColor.BLUE: {}}
 
 
         # # splitting cells for computation
@@ -100,8 +100,8 @@ class Agent:
         best_score, best_state = self.mini_max(self.currentState, depth, maximise)
         
         self.currentState = best_state
-        print(self.grid)
-        print(self.currentState)
+        # print(self.grid)
+        # print(self.currentState)
         # format
         # best_move = (hexPos,dr,dq)
 
@@ -140,20 +140,22 @@ class Agent:
                 
                 for power in range(1, self.grid[cell][1] + 1):
                     # if not in grid, spawn
-                    if (cell + power*direction) not in self.grid:
+                    if (cell + direction*power) not in self.grid:
                         self.grid[cell] = (color, 1)
                     #in grid, add to power
                     else: 
                         # exceed maixmum, kill cell
-                        if self.grid[cell + power*direction] == MAX_CELL_POWER:
-                            self.grid.pop(cell + power*direction, None)
+                        if self.grid[cell + direction*power] == MAX_CELL_POWER:
+                            self.grid.pop(cell + direction*power, None)
                         # not exceed, add to power
                         else:
-                            self.grid[cell + power*direction] = (color, self.grid[cell + power*direction][1] + 1)
+                            self.grid[cell + direction*power] = (color, self.grid[cell + direction*power][1] + 1)
 
                 # remove from record
                 self.grid.pop(cell, None)
-                pass
+                # pass
+        print(self.grid)
+
 
 
     # return score for a particular grid state
@@ -247,7 +249,7 @@ class Agent:
     # Simulate a move. (spread action)
     # Takes a state, a hexagon location and movement direction as input.
     # Returns the simulated move as a new state
-    def generateStateSpread(self, predecessor: dict[dict, list, list, bool, bool], hex:HexPos, direction:HexDir):
+    def generateStateSpread(self, predecessor: dict[dict, list, list, bool, bool], hex:HexPos, direction):
 
         # state format
         # state = {gridLayout, previousMoves, heuristic_results, gameEnded}
@@ -259,7 +261,9 @@ class Agent:
             for power in range(1, newGrid[PlayerColor.RED][hex][1] + 1):
                 
                 r_new = (hex.r + direction.r * power) % 7
+                # r_new = (hex.r + direction[0] * power) % 7
                 q_new = (hex.q + direction.q * power) % 7
+                # q_new = (hex.q + direction[1] * power) % 7
                 rq_new = HexPos(r_new,q_new)
                 # remove a blue hex
                 if rq_new in newGrid[PlayerColor.BLUE]:
@@ -289,21 +293,23 @@ class Agent:
                 return None
 
             # terminal state?
-            if not newGrid[PlayerColor.BLUE]:
-                gameEnded = True
-            else:
-                gameEnded = False
+            # if not newGrid[PlayerColor.BLUE]:
+            #     gameEnded = True
+            # else:
+            #     gameEnded = False
 
             newState["previousMoves"].append((hex,direction))
 
             return {"gridLayout": newGrid, "previousMoves": newState["previousMoves"], 
-                    "heuristicResult": heuristicResult, "gameEnded": gameEnded, "isSpawnAction":False}
+                    "heuristicResult": heuristicResult, "gameEnded": True, "isSpawnAction":False}
         
         if self._color == PlayerColor.BLUE:
             for power in range(1, newGrid[PlayerColor.BLUE][hex][1] + 1):
 
                 r_new = (hex.r + direction.r * power) % 7
+                # r_new = (hex.r + direction[0] * power) % 7
                 q_new = (hex.q + direction.q * power) % 7
+                # q_new = (hex.q + direction[1] * power) % 7
                 rq_new = HexPos(r_new,q_new)
                 
                 # remove a red hex
@@ -342,7 +348,7 @@ class Agent:
             newState["previousMoves"].append((hex,direction))
 
             return {"gridLayout": newGrid, "previousMoves": newState["previousMoves"], 
-                    "heuristicResult": heuristicResult, "gameEnded": gameEnded, "isSpawnAction": False}
+                    "heuristicResult": heuristicResult, "gameEnded": True, "isSpawnAction": False}
 
 
     # simulate a move. (spawn action)
@@ -360,7 +366,7 @@ class Agent:
                 hex = HexPos(randnum1,randnum2)
 
                 if self.totalPower(predecessor) < 49 and self.valid_spawn(predecessor,hex):
-                    
+
                     newGrid[PlayerColor.RED].update({hex: (PlayerColor.RED, 1)})
                     isSpawnAction = True
 
@@ -391,8 +397,8 @@ class Agent:
                 randnum1 = random.randint(0,6)
                 randnum2 = random.randint(0,6)
                 hex = HexPos(randnum1,randnum2)
+
                 if self.totalPower(predecessor) < 49 and self.valid_spawn(predecessor, hex):
-                    
                     newGrid[PlayerColor.BLUE].update({hex : (PlayerColor.BLUE, 1)})
                     isSpawnAction = True
 
@@ -482,11 +488,11 @@ class Agent:
         blues = grid[PlayerColor.BLUE]
 
         for red in reds.keys():
-            if position == red:
+            if position.r == red.r and position.q == red.q:
                 return False
 
         for blue in blues.keys():
-            if position == blue:
+            if position.r == blue.r and position.q == blue.q:
                 return False
         
         return True

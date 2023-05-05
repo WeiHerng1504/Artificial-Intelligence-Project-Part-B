@@ -3,6 +3,7 @@
 import copy
 import math
 import random
+import operator
 from referee.game import \
     PlayerColor, Action, SpawnAction, SpreadAction, HexPos, HexDir, MAX_CELL_POWER
 
@@ -63,7 +64,7 @@ class Agent:
 
 
         # changeable
-        depth = 3
+        depth = 2
         maximise = True
 
         best_score, best_state = self.mini_max(currentState, depth, -math.inf, math.inf, maximise)
@@ -140,13 +141,15 @@ class Agent:
         # print( state[HEURISTIC_RESULT][0])
         # print(state[HEURISTIC_RESULT][1])
         #  (ownCount - opponentCount) , state[HEURISTIC_RESULT][0] , state[HEURISTIC_RESULT][1] , (ownPower - opponentPower)
-        score =  (ownPower - opponentPower) / state[HEURISTIC_RESULT][1]
+        score =  5 *(ownPower - opponentPower) + 2*(ownCount-opponentCount)
         return score
 
     # setting the color? or maximise? check ifs condition
     # takes a state, depth limit and colour; returns best score and best move
     def mini_max(self, state, depth, alpha, beta, maximise):
-        # potentialStates = self.potential_states(state)
+        potentialStates = self.potential_states(state)
+        potentialStates = sorted(potentialStates, key=operator.itemgetter(HEURISTIC_RESULT,IS_SPAWN_ACTION))
+
         # bestStates = [state]
         # solution = False
 
@@ -188,7 +191,7 @@ class Agent:
         if maximise:
             best_score = -math.inf
             # best_move = None
-            for child in self.potential_states(state):
+            for child in potentialStates:
                 score, _ = self.mini_max(child, depth-1,alpha, beta, False)
                 if score > best_score:
                     best_score = score
@@ -202,7 +205,7 @@ class Agent:
         else:
             best_score = math.inf
             # best_move = None
-            for child in self.potential_states(state):
+            for child in potentialStates:
                 score, _ = self.mini_max(child, depth-1, alpha, beta, True)
                 if score < best_score:
                     best_score = score
@@ -238,8 +241,12 @@ class Agent:
                 if newState:
                     potentialStates.append(newState)
             
-        newState = self.generateStateSpawn(state)
-        potentialStates.append(newState)
+        for r in range(0,7):
+            for q in range(0,7):
+                if self.valid_spawn(state,HexPos(r,q)):
+                    newState = self.generateStateSpawn(state, HexPos(r,q))
+                    potentialStates.append(newState)
+
         # :
         #     for blueHex in state[GRID_LAYOUT][PlayerColor.BLUE]:
         #         #generate a possible future state
@@ -361,7 +368,7 @@ class Agent:
 
 
     # simulate a move. (spawn action)
-    def generateStateSpawn(self, predecessor: dict[dict, list, list, bool, bool]):
+    def generateStateSpawn(self, predecessor: dict[dict, list, list, bool, bool], location:HexPos):
         heuristicResult = [0]
         newState = copy.deepcopy(predecessor)
         newGrid = newState[GRID_LAYOUT]
@@ -369,15 +376,15 @@ class Agent:
 
         if self._color == PlayerColor.RED:
             # try to spawn red hex with random position 
-            while not isSpawnAction:
-                randnum1 = random.randint(0,6)
-                randnum2 = random.randint(0,6)
-                hex = HexPos(randnum1,randnum2)
+            # while not isSpawnAction:
+                # randnum1 = random.randint(0,6)
+                # randnum2 = random.randint(0,6)
+                # hex = HexPos(randnum1,randnum2)
 
-                if self.totalPower(predecessor) < 49 and self.valid_spawn(predecessor,hex):
+                # if self.totalPower(predecessor) < 49 and self.valid_spawn(predecessor,hex):
 
-                    newGrid[PlayerColor.RED].update({hex: (PlayerColor.RED, 1)})
-                    isSpawnAction = True
+            newGrid[PlayerColor.RED].update({location: (PlayerColor.RED, 1)})
+            isSpawnAction = True
 
             # update heuristic
             heuristicResult.append(self.heuristic(newGrid))
@@ -396,21 +403,21 @@ class Agent:
             # edit this
             # print(tuple(hex) + (0,0))
 
-            newState["previousMoves"].append((hex,0,0))
+            newState["previousMoves"].append((location,0,0))
 
             return {"gridLayout": newGrid, "previousMoves": newState["previousMoves"], 
                     "heuristicResult": heuristicResult, "gameEnded": False, "isSpawnAction": isSpawnAction}
         
         if self._color == PlayerColor.BLUE:
             # try to spawn blue hex with random position
-            while not isSpawnAction:
-                randnum1 = random.randint(0,6)
-                randnum2 = random.randint(0,6)
-                hex = HexPos(randnum1,randnum2)
+            # while not isSpawnAction:
+                # randnum1 = random.randint(0,6)
+                # randnum2 = random.randint(0,6)
+                # hex = HexPos(randnum1,randnum2)
 
-                if self.totalPower(predecessor) < 49 and self.valid_spawn(predecessor, hex):
-                    newGrid[PlayerColor.BLUE].update({hex : (PlayerColor.BLUE, 1)})
-                    isSpawnAction = True
+                # if self.totalPower(predecessor) < 49 and self.valid_spawn(predecessor, hex):
+            newGrid[PlayerColor.BLUE].update({location : (PlayerColor.BLUE, 1)})
+            isSpawnAction = True
 
             # update heuristic
             heuristicResult.append(self.heuristic(newGrid))
@@ -427,7 +434,7 @@ class Agent:
             #     gameEnded = False
 
             #edit this
-            newState["previousMoves"].append((hex,0,0))
+            newState["previousMoves"].append((location,0,0))
 
             return {"gridLayout": newGrid, "previousMoves": newState["previousMoves"], 
                     "heuristicResult": heuristicResult, "gameEnded": False, "isSpawnAction": isSpawnAction}

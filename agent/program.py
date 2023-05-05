@@ -63,7 +63,7 @@ class Agent:
 
 
         # changeable
-        depth = 3
+        depth = 2
         maximise = True
 
         best_score, best_state = self.mini_max(currentState, depth, -math.inf, math.inf, maximise)
@@ -140,7 +140,7 @@ class Agent:
         # print( state[HEURISTIC_RESULT][0])
         # print(state[HEURISTIC_RESULT][1])
         #  (ownCount - opponentCount) , state[HEURISTIC_RESULT][0] , state[HEURISTIC_RESULT][1] , (ownPower - opponentPower)
-        score =  (ownPower - opponentPower) / state[HEURISTIC_RESULT][1]
+        score =  (ownPower - opponentPower)
         return score
 
     # setting the color? or maximise? check ifs condition

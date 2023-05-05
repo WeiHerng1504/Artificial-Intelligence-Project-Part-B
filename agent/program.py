@@ -44,7 +44,7 @@ class Agent:
         """
         Return the next action to take.
         """
-        print("action " + str(self._color) + "\n")
+        # print("action " + str(self._color))
 
         #don't need this?
         currentGrid = {PlayerColor.RED: {}, PlayerColor.BLUE: {}}
@@ -61,43 +61,12 @@ class Agent:
         currentState = {GRID_LAYOUT: currentGrid, PREVIOUS_MOVES: [], 
                      HEURISTIC_RESULT: [], GAME_ENDED: False, IS_SPAWN_ACTION: None}
 
-        # bestStates = [currentState]
-        # solution = False
-
-        # # run a heuristic comparison
-        # # heuristic has two components, 
-        # # first item is hexes converted, 
-        # # second item is shortest straight line distance
-        # # we prioritize first item
-
-        # # placeholder values to be replaced
-        # bestHeuristic = [0, 1000]
-
-        # for state in potentialMoves:
-        #     # solution found
-        #     if state["gameEnded"]:
-        #         solution = state["previousMoves"]
-        #         break
-
-        #     # converts more hexes
-        #     if state["heuristicResult"][0] > bestHeuristic[0]:
-        #         bestHeuristic = state["heuristicResult"]
-        #         continue
-
-        #     # shorter distance
-        #     if state["heuristicResult"][0] == bestHeuristic[0] and state["heuristicResult"][1] < bestHeuristic[1]:
-        #         bestHeuristic = state["heuristicResult"]
-
-
-        # # keeping only desirable nodes
-        # if not solution:
-        #     bestStates = [state for state in potentialMoves if state["heuristicResult"] == bestHeuristic]
 
         # changeable
         depth = 3
         maximise = True
 
-        best_score, best_state = self.mini_max(currentState, depth, maximise)
+        best_score, best_state = self.mini_max(currentState, depth, -math.inf, math.inf, maximise)
         
         # self.currentState = best_state
         # print(self.grid)
@@ -108,7 +77,9 @@ class Agent:
         if best_state != None:
             best_move = best_state[PREVIOUS_MOVES][-1]
         print(best_move)
-        
+        print(referee['time_remaining'])
+        # print(referee['space_limit'])
+
         match self._color:
             case PlayerColor.RED:
 
@@ -128,7 +99,7 @@ class Agent:
         """
         Update the agent with the last player's action.
         """
-        print("turn " + str(self._color) + "\n")
+        # print("turn " + str(self._color))
         # print(self.grid)
         match action:
             case SpawnAction(cell):
@@ -138,20 +109,21 @@ class Agent:
                 for power in range(1, self.grid[cell][1] + 1):
                     # if not in grid, spawn
                     if (cell + direction*power) not in self.grid.keys():
-                        self.grid[cell+ direction*power] = (color, 1)
+                        self.grid[cell + direction*power] = (color, 1)
+
                     #in grid, add to power
                     else: 
                         # exceed maixmum, kill cell
                         if self.grid[cell + direction*power][1] == MAX_CELL_POWER:
                             self.grid.pop(cell + direction*power, None)
-                        # not exceed, add to power
+                        # not exceed, add to powerw
                         else:
                             self.grid[cell + direction*power] = (color, self.grid[cell + direction*power][1] + 1)
 
                 # remove from record
                 self.grid.pop(cell, None)
                 # pass
-        print(self.grid)
+        # print(self.grid)
 
 
 
@@ -165,13 +137,47 @@ class Agent:
         ownPower = sum(cell[1] for cell in state[GRID_LAYOUT][self._color].values())
         opponentPower = sum(cell[1] for cell in state[GRID_LAYOUT][self._color.opponent].values())
         # +ve means more owns; -ve means more opponents
-        # score = ownCount - opponentCount 
-        score = ownPower - opponentPower
+        # print( state[HEURISTIC_RESULT][0])
+        # print(state[HEURISTIC_RESULT][1])
+        #  (ownCount - opponentCount) , state[HEURISTIC_RESULT][0] , state[HEURISTIC_RESULT][1] , (ownPower - opponentPower)
+        score =  (ownPower - opponentPower) / state[HEURISTIC_RESULT][1]
         return score
 
     # setting the color? or maximise? check ifs condition
     # takes a state, depth limit and colour; returns best score and best move
-    def mini_max(self, state, depth, maximise):
+    def mini_max(self, state, depth, alpha, beta, maximise):
+        # potentialStates = self.potential_states(state)
+        # bestStates = [state]
+        # solution = False
+
+        # # run a heuristic comparison
+        # # heuristic has two components, 
+        # # first item is hexes converted, 
+        # # second item is shortest straight line distance
+        # # we prioritize first item
+
+        # # placeholder values to be replaced
+        # bestHeuristic = [0, 1000]
+
+        # for state in potentialStates:
+        #     # solution found
+        #     if state["gameEnded"]:
+        #         solution = state["previousMoves"]
+        #         break
+
+        #     # converts more hexes
+        #     if state["heuristicResult"][0] > bestHeuristic[0]:
+        #         bestHeuristic = state["heuristicResult"]
+        #         continue
+
+        #     # shorter distance
+        #     if state["heuristicResult"][0] == bestHeuristic[0] and state["heuristicResult"][1] < bestHeuristic[1]:
+        #         bestHeuristic = state["heuristicResult"]
+
+
+        # # keeping only desirable nodes
+        # # if not solution:
+        # bestStates = [state for state in potentialStates if state["heuristicResult"] == bestHeuristic]
 
         # game ended, no red hexes or no blue hexes
         if depth == 0: #or state[GAME_ENDED]:  
@@ -183,11 +189,13 @@ class Agent:
             best_score = -math.inf
             # best_move = None
             for child in self.potential_states(state):
-                score, _ = self.mini_max(child, depth-1, False)
+                score, _ = self.mini_max(child, depth-1,alpha, beta, False)
                 if score > best_score:
                     best_score = score
                     best_move = child
-
+                alpha = max(alpha, score)
+                if beta <= alpha:
+                    break
             return best_score, best_move
 
         #False
@@ -195,11 +203,13 @@ class Agent:
             best_score = math.inf
             # best_move = None
             for child in self.potential_states(state):
-                score, _ = self.mini_max(child, depth-1, True)
+                score, _ = self.mini_max(child, depth-1, alpha, beta, True)
                 if score < best_score:
                     best_score = score
                     best_move = child
-
+                beta = min(beta, score)
+                if beta <= alpha:
+                    break
             return best_score, best_move
 
         
@@ -283,8 +293,8 @@ class Agent:
             newGrid[PlayerColor.RED].pop((hex))
 
             # update heuristic
-            # heuristicResult.append(self.heuristic(newGrid))
-            heuristicResult.append(0)
+            heuristicResult.append(self.heuristic(newGrid))
+            # heuristicResult.append(0)
 
             # state with no redhexes, avoid
             if not newGrid[PlayerColor.RED]:
@@ -331,18 +341,18 @@ class Agent:
             newGrid[PlayerColor.BLUE].pop((hex))
 
             # update heuristic
-            # heuristicResult.append(self.heuristic(newGrid))
-            heuristicResult.append(0)
+            heuristicResult.append(self.heuristic(newGrid))
+            # heuristicResult.append(0)
 
             # state with no blueHexes, avoid
             if not newGrid[PlayerColor.BLUE]:
                 return None
 
             # terminal state?
-            if not newGrid[PlayerColor.RED]:
-                gameEnded = True
-            else:
-                gameEnded = False
+            # if not newGrid[PlayerColor.RED]:
+                # gameEnded = True
+            # else:
+                # gameEnded = False
 
             newState["previousMoves"].append((hex,direction))
 
@@ -370,8 +380,8 @@ class Agent:
                     isSpawnAction = True
 
             # update heuristic
-            # heuristicResult.append(self.heuristic(newGrid))
-            heuristicResult.append(0)
+            heuristicResult.append(self.heuristic(newGrid))
+            # heuristicResult.append(0)
 
             # # state with no redhexes, avoid
             # if not newGrid[PlayerColor.RED]:
@@ -403,8 +413,8 @@ class Agent:
                     isSpawnAction = True
 
             # update heuristic
-            # heuristicResult.append(self.heuristic(newGrid))
-            heuristicResult.append(0)
+            heuristicResult.append(self.heuristic(newGrid))
+            # heuristicResult.append(0)
 
             # # state with no blueHexes, avoid
             # if not newGrid[PlayerColor.BLUE]:
@@ -433,8 +443,8 @@ class Agent:
             for redHex in grid[self._color].keys():
 
                 # manhattan distance with relative direction
-                manDist = [blueHex[0] - redHex[0], blueHex[1] - redHex[1]]
-
+                # manDist = [blueHex[0] - redHex[0], blueHex[1] - redHex[1]]
+                manDist = [blueHex.r - redHex.r, blueHex.q - redHex.q]
                 # check if wrapping is closer
                 for axis in range(len(manDist)):
                     if abs(manDist[axis]) > 3:

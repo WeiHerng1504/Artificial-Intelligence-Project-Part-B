@@ -52,7 +52,7 @@ class HexDir(Enum):
     UpLeft    = HexVec(0, -1)
     Up        = HexVec(1, -1)
     UpRight   = HexVec(1, 0)
-
+ 
     @classmethod
     def _missing_(cls, value: tuple[int, int]):
         for item in cls:

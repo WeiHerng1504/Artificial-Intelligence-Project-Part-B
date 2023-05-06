@@ -103,30 +103,44 @@ def main(options: Namespace|None=None):
                 "loc": player_loc,
             }
 
-        # Play the game!
-        async def _run(options: Namespace) -> Player | None:
-            event_handlers = [
-                game_event_logger(gl) if gl is not None else None,
-                game_commentator(rl),
-                output_board_updates(rl, options.use_colour, options.use_unicode)\
-                    if options.verbosity >= 2 else None,
-                game_delay(options.wait) if options.wait > 0 else None,
-                game_user_wait(rl) if options.wait < 0 else None,
-            ]
+        games_played = 0
+        blue_wins = 0
+        red_wins = 0
+        while games_played < 10:
+            # Play the game!
+            async def _run(options: Namespace) -> Player | None:
+                event_handlers = [
+                    game_event_logger(gl) if gl is not None else None,
+                    game_commentator(rl),
+                    output_board_updates(rl, options.use_colour, options.use_unicode)\
+                        if options.verbosity >= 2 else None,
+                    game_delay(options.wait) if options.wait > 0 else None,
+                    game_user_wait(rl) if options.wait < 0 else None,
+                ]
 
-            return await run_game(
-                players=[p for p in agents.keys()],
-                event_handlers=event_handlers,
-            )
-        
-        result = asyncio.get_event_loop().run_until_complete(_run(options))
+                return await run_game(
+                    players=[p for p in agents.keys()],
+                    event_handlers=event_handlers,
+                )
+            
+            result = asyncio.get_event_loop().run_until_complete(_run(options))
 
-        # Print the final result under all circumstances
-        if result is None:
-            rl.critical("result: draw")
-        else:
-            rl.critical(f"result: {agents[result]['name']}")
+            if result.color == PlayerColor.RED:
+                red_wins += 1
+            elif result.color == PlayerColor.BLUE:
+                blue_wins += 1
 
+            # Print the final result under all circumstances
+            if result is None:
+                rl.critical("result: draw")
+            else:
+                rl.critical(f"result: {agents[result]['name']}")
+
+            games_played += 1
+
+        print("GAMES PLAYED: " + str(games_played))
+        print("RED WINS: " + str(red_wins))
+        print("BLUE WINS: "+ str(blue_wins))
         exit(0)
 
     except KeyboardInterrupt:

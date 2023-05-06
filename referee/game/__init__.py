@@ -79,55 +79,67 @@ async def game(
 
     board: Board = Board()
     winner_color: PlayerColor | None = None
+    games_played = 0
+    total_games = 5
+    Red_wins = 0
+    blue_wins = 0
 
-    yield GameBegin(board)
-    try:
-        # Initialise the players
-        yield PlayerInitialising(p1)
-        async with p1:
+    while games_played < total_games:
+        yield GameBegin(board)
+        try:
+            # Initialise the players
+            yield PlayerInitialising(p1)
+            async with p1:
 
-            yield PlayerInitialising(p2)
-            async with p2:
-            
-                # Each loop iteration is a turn.
-                while True:
-                    # Get the current player.
-                    turn_color: PlayerColor = board._turn_color
-                    player: Player = players[board._turn_color]
-                    
-                    # Get the current player's requested action.
-                    turn_id = board.turn_count + 1
-                    yield TurnBegin(turn_id, player)
-                    action: Action = await player.action()
-                    yield TurnEnd(turn_id, player, action)
+                yield PlayerInitialising(p2)
+                async with p2:
+                
+                    # Each loop iteration is a turn.
+                    while True:
+                        # Get the current player.
+                        turn_color: PlayerColor = board._turn_color
+                        player: Player = players[board._turn_color]
+                        
+                        # Get the current player's requested action.
+                        turn_id = board.turn_count + 1
+                        yield TurnBegin(turn_id, player)
+                        action: Action = await player.action()
+                        yield TurnEnd(turn_id, player, action)
 
-                    # Update the board state accordingly.
-                    board.apply_action(action)
-                    yield BoardUpdate(board)
+                        # Update the board state accordingly.
+                        board.apply_action(action)
+                        yield BoardUpdate(board)
 
-                    # Check if game is over.
-                    if board.game_over:
-                        winner_color = board.winner_color
-                        break
+                        # Check if game is over.
+                        if board.game_over:
+                            games_played += 1
+                            winner_color = board.winner_color
+                            if (winner_color == PlayerColor.BLUE):
+                                blue_wins += 1
+                            else:
+                                Red_wins += 1
+                            break
 
-                    # Update both players.
-                    await p1.turn(turn_color, action)
-                    await p2.turn(turn_color, action)
+                        # Update both players.
+                        await p1.turn(turn_color, action)
+                        await p2.turn(turn_color, action)
 
-    except (PlayerException) as e:
-        error_msg: str = e.args[0]
-        if isinstance(e, IllegalActionException):
-            error_msg = f"ILLEGAL ACTION: {e.args[0]}"
-        else:
-            error_msg = f"ERROR: {e.args[0]}"
-        error_player: PlayerColor = e.args[1]
-        winner_color = error_player.opponent
-        yield PlayerError(error_msg)
+        except (PlayerException) as e:
+            error_msg: str = e.args[0]
+            if isinstance(e, IllegalActionException):
+                error_msg = f"ILLEGAL ACTION: {e.args[0]}"
+            else:
+                error_msg = f"ERROR: {e.args[0]}"
+            error_player: PlayerColor = e.args[1]
+            winner_color = error_player.opponent
+            yield PlayerError(error_msg)
 
-    except Exception as e:
-        # Unhandled error (possibly a referee bug), allow it through 
-        # while also notifying the consumer.
-        yield UnhandledError(str(e))
-        raise e
+        except Exception as e:
+            # Unhandled error (possibly a referee bug), allow it through 
+            # while also notifying the consumer.
+            yield UnhandledError(str(e))
+            raise e
         
-    yield GameEnd(players[winner_color] if winner_color is not None else None)
+        yield GameEnd(players[winner_color] if winner_color is not None else None)
+
+    print("SIM_END")

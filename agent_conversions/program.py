@@ -137,10 +137,8 @@ class Agent:
         ownPower = sum(cell[1] for cell in state[GRID_LAYOUT][self._color].values())
         opponentPower = sum(cell[1] for cell in state[GRID_LAYOUT][self._color.opponent].values())
         # +ve means more owns; -ve means more opponents
-        # print( state[HEURISTIC_RESULT][0])
-        # print(state[HEURISTIC_RESULT][1])
-        #  (ownCount - opponentCount) , state[HEURISTIC_RESULT][0] , state[HEURISTIC_RESULT][1] , (ownPower - opponentPower)
-        score =  (ownPower - opponentPower)
+
+        score = state["heuristicResult"][0]
         return score
 
     # setting the color? or maximise? check ifs condition
@@ -193,7 +191,7 @@ class Agent:
                 if score > best_score:
                     best_score = score
                     best_move = child
-                alpha = max(alpha, score)
+                alpha = max(alpha, best_score)
                 if beta <= alpha:
                     break
             return best_score, best_move
@@ -207,7 +205,7 @@ class Agent:
                 if score < best_score:
                     best_score = score
                     best_move = child
-                beta = min(beta, score)
+                beta = min(beta, best_score)
                 if beta <= alpha:
                     break
             return best_score, best_move
@@ -237,9 +235,10 @@ class Agent:
                 newState = self.generateStateSpread(state, hex, direction)
                 if newState:
                     potentialStates.append(newState)
-            
-        newState = self.generateStateSpawn(state)
-        potentialStates.append(newState)
+        
+        for i in range (int((49 - len(self.grid)) / 3)):
+            newState = self.generateStateSpawn(state)
+            potentialStates.append(newState)
         # :
         #     for blueHex in state[GRID_LAYOUT][PlayerColor.BLUE]:
         #         #generate a possible future state

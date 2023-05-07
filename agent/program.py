@@ -64,7 +64,7 @@ class Agent:
 
 
         # changeable
-        depth = 2
+        depth = 3
         maximise = True
 
         best_score, best_state = self.mini_max(currentState, depth, -math.inf, math.inf, maximise)
@@ -141,12 +141,13 @@ class Agent:
         # print( state[HEURISTIC_RESULT][0])
         # print(state[HEURISTIC_RESULT][1])
         #  (ownCount - opponentCount) , state[HEURISTIC_RESULT][0] , state[HEURISTIC_RESULT][1] , (ownPower - opponentPower)
-        score =  5 *(ownPower - opponentPower) + 2*(ownCount-opponentCount)
+        score =  5*(ownPower - opponentPower)  + 2*(ownCount-opponentCount) 
         return score
 
     # setting the color? or maximise? check ifs condition
     # takes a state, depth limit and colour; returns best score and best move
     def mini_max(self, state, depth, alpha, beta, maximise):
+        
         potentialStates = self.potential_states(state)
         potentialStates = sorted(potentialStates, key=operator.itemgetter(HEURISTIC_RESULT,IS_SPAWN_ACTION))
 
@@ -183,7 +184,7 @@ class Agent:
         # bestStates = [state for state in potentialStates if state["heuristicResult"] == bestHeuristic]
 
         # game ended, no red hexes or no blue hexes
-        if depth == 0: #or state[GAME_ENDED]:  
+        if depth == 0 or (state[GAME_ENDED] and state[IS_SPAWN_ACTION]== False):  
             return self.eval_func(state), None
         
         best_move = None
@@ -196,7 +197,7 @@ class Agent:
                 if score > best_score:
                     best_score = score
                     best_move = child
-                alpha = max(alpha, score)
+                alpha = max(alpha, best_score)
                 if beta <= alpha:
                     break
             return best_score, best_move
@@ -210,7 +211,7 @@ class Agent:
                 if score < best_score:
                     best_score = score
                     best_move = child
-                beta = min(beta, score)
+                beta = min(beta, best_score)
                 if beta <= alpha:
                     break
             return best_score, best_move
@@ -241,11 +242,17 @@ class Agent:
                 if newState:
                     potentialStates.append(newState)
             
-        for r in range(0,7):
-            for q in range(0,7):
-                if self.valid_spawn(state,HexPos(r,q)):
-                    newState = self.generateStateSpawn(state, HexPos(r,q))
-                    potentialStates.append(newState)
+        # spawn in selected locations?
+        # for r in range(0,7):
+            # for q in range(0,7):
+                # if self.valid_spawn(state,HexPos(r,q)):
+                #     newState = self.generateStateSpawn(state, HexPos(r,q))
+                #     potentialStates.append(newState)
+        rand1 = random.randint(0,6)
+        rand2 = random.randint(0,6)
+        if self.valid_spawn(state,HexPos(rand1,rand2)):
+            newState = self.generateStateSpawn(state, HexPos(rand1,rand2))
+            potentialStates.append(newState)
 
         # :
         #     for blueHex in state[GRID_LAYOUT][PlayerColor.BLUE]:

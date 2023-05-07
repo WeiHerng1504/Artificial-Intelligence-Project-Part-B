@@ -106,7 +106,7 @@ def main(options: Namespace|None=None):
         games_played = 0
         blue_wins = 0
         red_wins = 0
-        while games_played < 10:
+        while games_played < 50:
             # Play the game!
             async def _run(options: Namespace) -> Player | None:
                 event_handlers = [
@@ -139,8 +139,8 @@ def main(options: Namespace|None=None):
             games_played += 1
 
         print("GAMES PLAYED: " + str(games_played))
-        print("RED WINS: " + str(red_wins))
-        print("BLUE WINS: "+ str(blue_wins))
+        print("RED WINS: " + str(red_wins / games_played))
+        print("BLUE WINS: "+ str(blue_wins / games_played))
         exit(0)
 
     except KeyboardInterrupt:

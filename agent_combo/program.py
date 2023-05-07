@@ -86,8 +86,8 @@ class Agent:
         # best_move = (hexPos,dr,dq)
 
         if best_state != None:
-            best_move = best_state[PREVIOUS_MOVES][-1]
-        print(best_move)
+            best_move = best_state[PREVIOUS_MOVES][0]
+        #print(best_move)
         print(referee['time_remaining'])
         # print(referee['space_limit'])
 
@@ -202,7 +202,9 @@ class Agent:
         if maximise:
             best_score = -math.inf
             # best_move = None
-            for child in self.potential_states(state):
+            potentialStates = self.potential_states(state)
+            potentialStates.sort(key=self.eval_func)
+            for child in potentialStates:
                 score, _ = self.mini_max(child, depth-1,alpha, beta, False)
                 if score > best_score:
                     best_score = score
@@ -217,7 +219,9 @@ class Agent:
         else:
             best_score = math.inf
             # best_move = None
-            for child in self.potential_states(state):
+            potentialStates = self.potential_states(state)
+            potentialStates.sort(key=self.eval_func)
+            for child in potentialStates:
                 score, _ = self.mini_max(child, depth-1, alpha, beta, True)
                 if score < best_score:
                     best_score = score

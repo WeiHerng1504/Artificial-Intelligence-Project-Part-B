@@ -106,6 +106,7 @@ def main(options: Namespace|None=None):
         games_played = 0
         blue_wins = 0
         red_wins = 0
+        draws = 0
         while games_played < 50:
             # Play the game!
             async def _run(options: Namespace) -> Player | None:
@@ -125,10 +126,13 @@ def main(options: Namespace|None=None):
             
             result = asyncio.get_event_loop().run_until_complete(_run(options))
 
-            if result.color == PlayerColor.RED:
+            if result == None:
+                draws += 1
+            elif result.color == PlayerColor.RED:
                 red_wins += 1
-            elif result.color == PlayerColor.BLUE:
+            else:
                 blue_wins += 1
+
 
             # Print the final result under all circumstances
             if result is None:

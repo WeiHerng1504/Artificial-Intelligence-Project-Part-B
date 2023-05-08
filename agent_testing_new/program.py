@@ -213,6 +213,7 @@ class Agent:
         #             potentialStates.append(newState)
 
         # spawn at a random location
+        random.seed()
         rand1 = random.randint(0,6)
         rand2 = random.randint(0,6)
         if self.valid_spawn(state,HexPos(rand1,rand2)):

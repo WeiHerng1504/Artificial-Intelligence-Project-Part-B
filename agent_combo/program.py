@@ -4,7 +4,7 @@ import copy
 import math
 import random
 from referee.game import \
-    PlayerColor, Action, SpawnAction, SpreadAction, HexPos, HexDir, MAX_CELL_POWER
+    PlayerColor, Action, SpawnAction, SpreadAction, HexPos, HexDir, MAX_CELL_POWER, BOARD_N
 
 
 # This is the entry point for your game playing agent. Currently the agent
@@ -37,8 +37,7 @@ class Agent:
         """
         self._color = color
         self.currentPlayer = None
-        random.seed()
-
+        
         #TBD
         self.grid = {}
         # self.currentState = {GRID_LAYOUT: {PlayerColor.RED: {}, PlayerColor.BLUE: {}}, PREVIOUS_MOVES: [], 
@@ -76,7 +75,7 @@ class Agent:
 
 
         # changeable
-        depth = 2
+        depth = 3
         maximise = True
 
         best_score, best_state = self.mini_max(currentState, depth, -math.inf, math.inf, maximise)
@@ -165,12 +164,17 @@ class Agent:
             return -1000
         avg_ratio = (ownPower / ownCount) / (opponentPower / opponentCount)
 
-        score = modifier * ((ownPower - opponentPower) + (ownCount - opponentCount) + avg_ratio * state["heuristicResult"][0])
+        weightCount = (-math.pow(ownCount,2) + math.pow(BOARD_N, 2)*ownCount) / math.pow((math.pow(BOARD_N, 2)/2), 2)
+
+        score = modifier * ((ownPower - opponentPower) + weightCount*(ownCount - opponentCount) + avg_ratio * state["heuristicResult"][0])
         return score
 
     # setting the color? or maximise? check ifs condition
     # takes a state, depth limit and colour; returns best score and best move
     def mini_max(self, state, depth, alpha, beta, maximise):
+
+        if depth == 0 or state[GAME_ENDED]:  
+            return self.eval_func(state), None
 
         if maximise:
             player = self._color
@@ -178,11 +182,11 @@ class Agent:
             player = self._color.opponent
 
         potentialStates = self.potential_states(state, player)
-        potentialStates.sort(key=self.eval_func)
 
-        # game ended, no red hexes or no blue hexes
-        if depth == 0 or state[GAME_ENDED]:  
-            return self.eval_func(state), None
+        if maximise:
+            potentialStates.sort(key=self.eval_func, reverse=True)
+        else:
+            potentialStates.sort(key=self.eval_func)
 
         best_move = None
         #True
@@ -269,7 +273,7 @@ class Agent:
             rq_new = HexPos(r_new,q_new)
             # remove a blue hex
             if rq_new in newGrid[player.opponent]:
-                heuristicResult[0] += 1
+                heuristicResult[0] += newGrid[player.opponent][rq_new][1]
                 newGrid[player].update({rq_new:
                                 (newGrid[player.opponent][rq_new])})
                 newGrid[player.opponent].pop(rq_new, None)
@@ -292,13 +296,18 @@ class Agent:
         # heuristicResult.append(0)
 
         # state with no redhexes, avoid
-        if not newGrid[player]:
-            return None
+        # if not newGrid[player]:
+        #     return None
+        
+        if not newGrid[player.opponent] or not newGrid[player]:
+            gameEnded = True
+        else:
+            gameEnded = False
 
         newState["previousMoves"].append((hex,direction))
 
         return {"gridLayout": newGrid, "previousMoves": newState["previousMoves"], 
-                "heuristicResult": heuristicResult, "gameEnded": True, "isSpawnAction":False}
+                "heuristicResult": heuristicResult, "gameEnded": gameEnded, "isSpawnAction":False}
 
     # simulate a move. (spawn action)
     def generateStateSpawn(self, predecessor: dict[dict, list, list, bool, bool], location: HexPos):
@@ -309,14 +318,17 @@ class Agent:
 
         if location == None:
             safe_spawns = NEUTRAL_HEXES
-            for opp_cell in newGrid[self.currentPlayer.opponent]:
-                if (opp_cell) in safe_spawns: safe_spawns.remove(opp_cell)
+            safe_spawns = [cell for cell in safe_spawns if cell not in newGrid[self.currentPlayer.opponent].keys()]
+            safe_spawns = [cell for cell in safe_spawns if cell not in newGrid[self.currentPlayer].keys()]
+            for opp_cell in newGrid[self.currentPlayer.opponent].keys():
                 for power in range(1, newGrid[self.currentPlayer.opponent][opp_cell][1] + 1):
                     for d in validDirections:
                         if (opp_cell + d*power) in safe_spawns: safe_spawns.remove(opp_cell + d*power)
+
             
             if len(safe_spawns) == 0: return None
 
+            random.seed()
             location = safe_spawns[random.randint(0, len(safe_spawns) - 1)]
         
         newGrid[self.currentPlayer].update({location: (self.currentPlayer, 1)})

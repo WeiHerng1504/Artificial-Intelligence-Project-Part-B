@@ -166,7 +166,13 @@ class Agent:
 
         weightCount = (-math.pow(ownCount,2) + math.pow(BOARD_N, 2)*ownCount) / math.pow((math.pow(BOARD_N, 2)/2), 2)
 
-        score = modifier * ((ownPower - opponentPower) + weightCount*(ownCount - opponentCount) + avg_ratio * state["heuristicResult"][0])
+        if state["heuristicResult"][1] == 0:
+            avg = 0
+        else:
+            avg = state["heuristicResult"][0]/state["heuristicResult"][1]
+
+        score = modifier * (2*(ownPower - opponentPower) + (ownCount - opponentCount))
+        #score = modifier * (avg)
         return score
 
     # setting the color? or maximise? check ifs condition
@@ -183,10 +189,7 @@ class Agent:
 
         potentialStates = self.potential_states(state, player)
 
-        if maximise:
-            potentialStates.sort(key=self.eval_func, reverse=True)
-        else:
-            potentialStates.sort(key=self.eval_func)
+        potentialStates = sorted(potentialStates, key=lambda state: state[HEURISTIC_RESULT])
 
         best_move = None
         #True
@@ -234,9 +237,26 @@ class Agent:
 
         self.currentPlayer = player
 
-        if len(state[GRID_LAYOUT][player]) == 0:
-            newState = self.generateStateSpawn(state, None)
-            if newState is not None: potentialStates.append(newState)
+    
+        safe_spawns = NEUTRAL_HEXES
+        safe_spawns = [cell for cell in safe_spawns if cell not in state[GRID_LAYOUT][self.currentPlayer.opponent].keys()]
+        safe_spawns = [cell for cell in safe_spawns if cell not in state[GRID_LAYOUT][self.currentPlayer].keys()]
+        for opp_cell in state[GRID_LAYOUT][self.currentPlayer.opponent].keys():
+            for power in range(1, state[GRID_LAYOUT][self.currentPlayer.opponent][opp_cell][1] + 1):
+                for d in validDirections:
+                    if (opp_cell + d*power) in safe_spawns: safe_spawns.remove(opp_cell + d*power)
+
+        spawn_count = int(len(safe_spawns) / 2)
+        for _ in range(0, spawn_count):
+            random.seed()
+            cell = safe_spawns[random.randint(0, len(safe_spawns) - 1)]
+            newState = self.generateStateSpawn(state, cell)
+            potentialStates.append(newState)
+            safe_spawns.remove(cell)
+
+        # if len(state[GRID_LAYOUT][player]) == 0:
+        #     newState = self.generateStateSpawn(state, None)
+        #     if newState is not None: potentialStates.append(newState)
 
         for hex in state[GRID_LAYOUT][player]:
             #generate a possible future state
@@ -246,9 +266,9 @@ class Agent:
                     potentialStates.append(newState)
 
 
-            if ((self.totalPower(state) < 49) and hex + direction not in self.grid):
-                newState = self.generateStateSpawn(state, hex+direction)
-                potentialStates.append(newState)
+            # if ((self.totalPower(state) < 49) and hex + direction not in self.grid):
+            #     newState = self.generateStateSpawn(state, hex+direction)
+            #     potentialStates.append(newState)
 
         return potentialStates
 
@@ -273,7 +293,7 @@ class Agent:
             rq_new = HexPos(r_new,q_new)
             # remove a blue hex
             if rq_new in newGrid[player.opponent]:
-                heuristicResult[0] += newGrid[player.opponent][rq_new][1]
+                heuristicResult[0] += 1
                 newGrid[player].update({rq_new:
                                 (newGrid[player.opponent][rq_new])})
                 newGrid[player.opponent].pop(rq_new, None)
@@ -316,20 +336,20 @@ class Agent:
         newGrid = newState[GRID_LAYOUT]
         validDirections = (HexDir.DownRight, HexDir.Down, HexDir.DownLeft, HexDir.UpLeft, HexDir.Up, HexDir.UpRight)
 
-        if location == None:
-            safe_spawns = NEUTRAL_HEXES
-            safe_spawns = [cell for cell in safe_spawns if cell not in newGrid[self.currentPlayer.opponent].keys()]
-            safe_spawns = [cell for cell in safe_spawns if cell not in newGrid[self.currentPlayer].keys()]
-            for opp_cell in newGrid[self.currentPlayer.opponent].keys():
-                for power in range(1, newGrid[self.currentPlayer.opponent][opp_cell][1] + 1):
-                    for d in validDirections:
-                        if (opp_cell + d*power) in safe_spawns: safe_spawns.remove(opp_cell + d*power)
+        # if location == None:
+        #     safe_spawns = NEUTRAL_HEXES
+        #     safe_spawns = [cell for cell in safe_spawns if cell not in newGrid[self.currentPlayer.opponent].keys()]
+        #     safe_spawns = [cell for cell in safe_spawns if cell not in newGrid[self.currentPlayer].keys()]
+        #     for opp_cell in newGrid[self.currentPlayer.opponent].keys():
+        #         for power in range(1, newGrid[self.currentPlayer.opponent][opp_cell][1] + 1):
+        #             for d in validDirections:
+        #                 if (opp_cell + d*power) in safe_spawns: safe_spawns.remove(opp_cell + d*power)
 
             
-            if len(safe_spawns) == 0: return None
+        #     if len(safe_spawns) == 0: return None
 
-            random.seed()
-            location = safe_spawns[random.randint(0, len(safe_spawns) - 1)]
+        #     random.seed()
+        #     location = safe_spawns[random.randint(0, len(safe_spawns) - 1)]
         
         newGrid[self.currentPlayer].update({location: (self.currentPlayer, 1)})
 
@@ -347,8 +367,8 @@ class Agent:
         # placeholder value to be replaced
         shortestDistance = 1000
 
-        for blueHex in grid[self._color.opponent].keys():
-            for redHex in grid[self._color].keys():
+        for blueHex in grid[self.currentPlayer.opponent].keys():
+            for redHex in grid[self.currentPlayer].keys():
 
                 # manhattan distance with relative direction
                 # manDist = [blueHex[0] - redHex[0], blueHex[1] - redHex[1]]
@@ -375,7 +395,7 @@ class Agent:
                 # longer, ignore
                 if distance > shortestDistance:
                     continue
-
+            
                 # shorter, keep track
                 if distance < shortestDistance:
                     shortestDistance = distance

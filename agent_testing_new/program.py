@@ -146,12 +146,18 @@ class Agent:
     # takes a state, depth limit, alpha value, beta value and bool value; returns best score and best move
     def mini_max(self, state, depth, alpha, beta, maximise):
         
+        # potentialStates = self.potential_states(state)
+        # potentialStates = sorted(potentialStates, key=operator.itemgetter(HEURISTIC_RESULT,IS_SPAWN_ACTION))
+
+        # # game ended, no red hexes or no blue hexes
+        # if depth == 0 or (state[GAME_ENDED] and state[IS_SPAWN_ACTION]== False):  
+        #     return self.eval_func(state), None
+        if depth == 0 or state[GAME_ENDED]:  
+            return self.eval_func(state), None
+        
         potentialStates = self.potential_states(state)
         potentialStates = sorted(potentialStates, key=operator.itemgetter(HEURISTIC_RESULT,IS_SPAWN_ACTION))
 
-        # game ended, no red hexes or no blue hexes
-        if depth == 0 or (state[GAME_ENDED] and state[IS_SPAWN_ACTION]== False):  
-            return self.eval_func(state), None
         
         best_move = None
         #True
@@ -163,7 +169,7 @@ class Agent:
                 if score > best_score:
                     best_score = score
                     best_move = child
-                    alpha = max(alpha, best_score)
+                alpha = max(alpha, best_score)
                 # if alpha >= beta:
                 if best_score >= beta:
                     return best_score, best_move
@@ -178,7 +184,7 @@ class Agent:
                 if score < best_score:
                     best_score = score
                     best_move = child
-                    beta = min(beta, best_score)
+                beta = min(beta, best_score)
                 # if beta <= alpha:
                 if best_score <= alpha:
                     return best_score, best_move

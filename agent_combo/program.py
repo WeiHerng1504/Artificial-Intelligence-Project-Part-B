@@ -138,7 +138,8 @@ class Agent:
 
         return score
 
-    # takes a state, depth limit and colour; returns best score and best move
+    # Adapted from https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-4-alpha-beta-pruning/
+    # takes a state, depth limit; returns best score and best move
     def mini_max(self, state, depth, alpha, beta, maximise):
 
         if depth == 0 or state[GAME_ENDED]:  

@@ -72,7 +72,7 @@ class Agent:
 
 
         # minimax parameters
-        depth = 2
+        depth = 3
         maximise = True
 
         best_score, best_state = self.mini_max(currentState, depth, -math.inf, math.inf, maximise)

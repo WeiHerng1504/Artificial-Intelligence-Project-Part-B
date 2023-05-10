@@ -134,7 +134,7 @@ class Agent:
         elif ownCount == 0:
             return -1000
 
-        score = ownCount - opponentCount
+        score = ownPower - opponentPower
 
         return score
 

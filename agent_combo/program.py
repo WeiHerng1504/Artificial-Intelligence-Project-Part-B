@@ -259,7 +259,7 @@ class Agent:
         newState[PREVIOUS_MOVES].append((hex,direction))
 
         return {GRID_LAYOUT: newGrid, PREVIOUS_MOVES: newState[PREVIOUS_MOVES], 
-                HEURISTIC_RESULT: heuristicResult, GAME_ENDED: gameEnded}
+                HEURISTIC_RESULT: heuristicResult, GAME_ENDED: gameEnded, IS_SPAWN_ACTION: False}
 
     # simulate a move. (spawn action)
     def generateStateSpawn(self, predecessor: dict[dict, list, list, bool, bool], location: HexPos):
@@ -276,7 +276,7 @@ class Agent:
         newState[PREVIOUS_MOVES].append((location,0,0))
 
         return {GRID_LAYOUT: newGrid, PREVIOUS_MOVES: newState[PREVIOUS_MOVES], 
-                HEURISTIC_RESULT: heuristicResult, GAME_ENDED: False}
+                HEURISTIC_RESULT: heuristicResult, GAME_ENDED: False, IS_SPAWN_ACTION: True}
 
     # own against opponent, shortest distance
     def heuristic(self, grid):
@@ -315,7 +315,7 @@ class Agent:
                     shortestDistance = distance
         
         # distance made negative to help with sorting
-        return shortestDistance
+        return -shortestDistance
 
 
     # returns total pow er of red and blue hexes on the grid
